@@ -82,16 +82,25 @@ def lambda_handler(event, context):
         
         print("Calling Bedrock invoke_model API with payload:", json.dumps(request_payload))
         
-        # invoke_model APIを呼び出し
-        response = bedrock_client.invoke_model(
-            modelId=MODEL_ID,
-            body=json.dumps(request_payload),
-            contentType="application/json"
-        )
+        # FAST APIを呼び出し
+        # ColabのAPI URL
+        api_url = "https://d074-34-125-38-26.ngrok-free.app/predict"
+
+        # メッセージをAPIに送信する形式に変換
+        request_data = json.dumps({"text": message}).encode("utf-8")
+
+        # HTTPリクエストを作成（標準ライブラリのみ使用）
+        req = urllib.request.Request(api_url, data=request_data, headers={"Content-Type": "application/json"})
         
+        # 応答を受け取り
+        with urllib.request.urlopen(req) as res:
+        response_body = json.loads(res.read().decode("utf-8"))
+
+        #アシスタントの応答を取得
+        assistant_response = response_body["response"]
+                
         # レスポンスを解析
-        response_body = json.loads(response['body'].read())
-        print("Bedrock response:", json.dumps(response_body, default=str))
+        print("", json.dumps(response_body, default=str))
         
         # 応答の検証
         if not response_body.get('output') or not response_body['output'].get('message') or not response_body['output']['message'].get('content'):
